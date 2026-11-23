@@ -1,0 +1,13 @@
+services:
+  detok:
+    image: ghcr.io/zgenny/detok:latest
+    container_name: detok
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      DETOK_PASSWORD: "change-me"
+      TZ: Europe/Rome
+    volumes:
+      - ./data:/data
+    shm_size: "1gb"

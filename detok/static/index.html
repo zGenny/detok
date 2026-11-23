@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detok — Keep the Streak</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<style>
+  :root {
+    --bg: #ffffff; --surface: #ffffff; --surface2: #f1f1f2; --hover: #e8e8ea; --text: #161823;
+    --muted: rgba(22,24,35,.55); --line: rgba(22,24,35,.12);
+    --red: #fe2c55; --red-hover: #ef2950; --cyan: #25f4ee; --cyan-text: #0b9c98; --on-red: #fff;
+    --ok: #0ba37a; --warn: #c98a00; --bad: #fe2c55; --shadow: 0 2px 12px rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212; --surface: #1e1e1e; --surface2: #2f2f2f; --hover: #3a3a3a; --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.55); --line: rgba(255,255,255,.12); --cyan-text: #25f4ee;
+      --ok: #20d5a0; --warn: #ffc23d; --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 "TikTok Sans", "Proxima Nova", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input { font: inherit; color: inherit; }
+
+  .top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .top .in { max-width: 820px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+  .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+  .logo .mark { width: 34px; height: 34px; border-radius: 10px; background: #000; display: grid; place-items: center; font-size: 19px;
+                box-shadow: -2px -2px 0 var(--cyan), 2px 2px 0 var(--red); }
+  .logo .word { font-weight: 800; font-size: 24px; letter-spacing: -.5px;
+                text-shadow: -1.5px -1px 0 var(--cyan), 1.5px 1px 0 var(--red); }
+  #btnSend { margin-left: auto; }
+  .top .tag { color: var(--muted); font-size: 13px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  main { max-width: 820px; margin: 0 auto; padding: 0 16px 64px; }
+
+  .btn { border: 0; border-radius: 4px; padding: 0 16px; height: 36px; font-weight: 600; cursor: pointer;
+         background: var(--surface2); display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+  .btn:hover { background: var(--hover); }
+  .btn.red { background: var(--red); color: var(--on-red); }
+  .btn.red:hover { background: var(--red-hover); }
+  .btn.outline { background: transparent; border: 1px solid var(--red); color: var(--red); }
+  .btn.small { height: 30px; padding: 0 12px; font-size: 13px; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .icon { width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--muted);
+          cursor: pointer; display: inline-grid; place-items: center; font-size: 15px; }
+  .icon:hover { background: var(--surface2); color: var(--text); }
+  .icon:disabled { opacity: .35; cursor: default; }
+
+  input[type=text], input[type=time] { background: var(--surface2); border: 1px solid transparent; border-radius: 8px;
+         padding: 9px 12px; width: 100%; outline: none; }
+  input[type=text]:focus, input[type=time]:focus { border-color: var(--line); background: var(--surface); }
+  input::placeholder { color: var(--muted); }
+
+  input.switch { appearance: none; -webkit-appearance: none; width: 44px; height: 24px; border-radius: 99px; flex: none;
+                 background: var(--hover); position: relative; cursor: pointer; transition: background .2s; margin: 0; }
+  input.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+                        background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+  input.switch:checked { background: var(--red); }
+  input.switch:checked::after { transform: translateX(20px); }
+  input.switch:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+  .profile { display: flex; gap: 24px; align-items: center; padding: 28px 0 20px; flex-wrap: wrap; }
+  .bigav { width: 112px; height: 112px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 54px;
+           background: #000; position: relative; }
+  .bigav::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; z-index: -1;
+                   background: conic-gradient(var(--cyan), var(--red), var(--cyan)); }
+  .bigav { isolation: isolate; }
+  .pinfo { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 10px; }
+  .pinfo h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.3px; }
+  .pinfo .handle { color: var(--muted); font-weight: 600; margin-top: -8px; }
+  .stats { display: flex; gap: 20px; flex-wrap: wrap; }
+  .stats div { color: var(--muted); }
+  .stats b { color: var(--text); font-size: 18px; font-weight: 700; margin-right: 4px; }
+  .pbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .conn { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.on { background: var(--ok); } .dot.off { background: var(--bad); }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--line); position: sticky; top: 55px; background: var(--bg); z-index: 4; }
+  .tab { flex: 1; border: 0; background: none; padding: 12px 8px; font-weight: 600; font-size: 16px; color: var(--muted);
+         cursor: pointer; position: relative; }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected=true] { color: var(--text); }
+  .tab[aria-selected=true]::after { content: ""; position: absolute; left: 20%; right: 20%; bottom: -1px; height: 2px; background: var(--text); }
+  .tab .n { font-size: 12px; font-weight: 700; color: var(--muted); margin-left: 4px; }
+  .panel { padding-top: 16px; }
+
+  .addbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .addbar input { border-radius: 92px; padding: 10px 18px; flex: 1 1 180px; width: auto; }
+  .addbar .btn { border-radius: 92px; height: 42px; padding: 0 20px; }
+  .listhead { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 14px; margin: 14px 0 4px; }
+
+  .friend { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding: 12px 8px;
+            border-radius: 8px; }
+  .friend:hover { background: var(--surface2); }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: var(--surface2);
+            display: grid; place-items: center; color: var(--muted); font-weight: 700; font-size: 20px; }
+  .friend.paused .avatar { filter: grayscale(1); opacity: .6; }
+  .fbody { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .fname { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+  .fname .nick { font-weight: 700; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .fname .h { color: var(--muted); font-size: 13px; }
+  .streak { font-weight: 700; font-size: 13px; color: var(--red); white-space: nowrap; }
+  .fmsg { color: var(--muted); font-size: 14px; cursor: text; overflow-wrap: anywhere; }
+  .fmsg:hover { color: var(--text); }
+  .fmsg .rnd { font-style: italic; }
+  .preview { color: var(--cyan-text); font-size: 12px; overflow-wrap: anywhere; }
+  .note { font-size: 12px; } .note.bad { color: var(--bad); } .note.warn { color: var(--warn); } .note.muted { color: var(--muted); }
+  .err { color: var(--bad); font-size: 12px; } .err a { color: inherit; }
+  .fside { display: flex; align-items: center; gap: 6px; }
+  .acts { display: flex; opacity: 0; transition: opacity .15s; }
+  .friend:hover .acts, .friend:focus-within .acts { opacity: 1; }
+  @media (hover: none) { .acts { opacity: 1; } }
+
+  .chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; white-space: nowrap; letter-spacing: .2px; }
+  .chip.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+  .chip.warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+  .chip.bad { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); }
+  .chip.off { background: var(--surface2); color: var(--muted); }
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+  .empty .big { font-size: 44px; display: block; margin-bottom: 8px; }
+
+  .edit { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .edit .btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .edit .btns .ph { margin-left: auto; }
+  .friend .edit .btn:not(.red), .msg.editing .btn:not(.red) { background: var(--surface); border: 1px solid var(--line); }
+
+  .hint { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+  code { font: 600 13px ui-monospace, "JetBrains Mono", monospace; color: var(--cyan-text); background: var(--surface2);
+         padding: 1px 6px; border-radius: 4px; }
+  .msgs { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-bottom: 16px; }
+  .msg { display: inline-flex; align-items: center; gap: 2px; max-width: min(520px, 100%); background: var(--red); color: #fff;
+         border-radius: 18px 18px 4px 18px; padding: 8px 6px 8px 14px; }
+  .msg .txt { cursor: text; overflow-wrap: anywhere; }
+  .msg button { border: 0; background: none; color: rgba(255,255,255,.75); width: 26px; height: 26px; border-radius: 50%; cursor: pointer; flex: none; }
+  .msg button:hover { background: rgba(0,0,0,.18); color: #fff; }
+  .msg.editing { background: var(--surface2); color: var(--text); width: min(520px, 100%); padding: 8px; border-radius: 12px; }
+  .msg.editing .edit { width: 100%; margin: 0; }
+
+  .setting { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .setting .t { font-weight: 600; } .setting .d { color: var(--muted); font-size: 13px; }
+  .setting input[type=time] { width: 130px; }
+
+  pre { margin: 0; max-height: 60vh; overflow: auto; font: 12.5px/1.6 ui-monospace, "JetBrains Mono", monospace; color: var(--muted);
+        white-space: pre-wrap; word-break: break-word; background: var(--surface2); border-radius: 8px; padding: 12px 14px; }
+
+  footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; }
+  footer a { color: inherit; }
+  #toast { position: fixed; left: 50%; top: 72px; transform: translate(-50%, -8px); background: rgba(84,84,84,.94); color: #fff;
+           padding: 10px 18px; border-radius: 6px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity .2s, transform .2s;
+           pointer-events: none; max-width: calc(100% - 32px); z-index: 10; text-align: center; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 600px) {
+    .top .tag { display: none; }
+    .profile { flex-direction: column; text-align: center; gap: 14px; padding-top: 22px; }
+    .bigav { width: 96px; height: 96px; font-size: 46px; }
+    .pinfo { min-width: 0; width: 100%; align-items: center; }
+    .pinfo h1 { font-size: 22px; }
+    .stats { justify-content: center; gap: 0; width: 100%; }
+    .stats div { flex: 1; display: flex; flex-direction: column; font-size: 13px; }
+    .stats b { margin: 0; }
+    .conn { justify-content: center; flex-wrap: wrap; }
+    .pbtns { justify-content: center; }
+    .tabs { top: 53px; }
+    .tab { font-size: 14px; padding: 12px 4px; }
+    .friend { grid-template-columns: 48px 1fr; padding: 12px 0; }
+    .avatar { width: 48px; height: 48px; }
+    .fside { grid-column: 2; justify-content: space-between; }
+  }
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="logo" href="#"><span class="mark">🔥</span><span class="word">Detok</span></a>
+  <span class="tag">keep the streak, lose the scroll</span>
+  <button id="btnSend" class="btn red">Send now</button>
+</div></div>
+
+<main>
+  <section class="profile">
+    <div class="bigav" aria-hidden="true">🔥</div>
+    <div class="pinfo">
+      <h1>Your streaks</h1>
+      <div class="handle">@detok · we open TikTok so you don't have to</div>
+      <div class="stats">
+        <div><b id="statFriends">0</b>Friends</div>
+        <div><b id="today">0</b>Sent today</div>
+        <div><b id="statTime">--:--</b>Send after</div>
+      </div>
+      <div class="conn"><span class="dot" id="sessDot"></span><span id="sess">…</span><span id="tmr"></span></div>
+      <div class="pbtns">
+        <button id="btnTimer" class="btn">…</button>
+        <button id="btnLogin" class="btn">Log in to TikTok</button>
+        <button id="btnImport" class="btn" hidden title="File created on your PC with: detok session export session.json">Import session…</button>
+        <input type="file" id="sessFile" accept=".json,application/json" hidden>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="friends">Friends<span class="n" id="nFriends"></span></button>
+    <button class="tab" role="tab" data-tab="messages">Messages<span class="n" id="nMsgs"></span></button>
+    <button class="tab" role="tab" data-tab="settings">Settings</button>
+    <button class="tab" role="tab" data-tab="log">Log</button>
+  </nav>
+
+  <section class="panel" data-panel="friends">
+    <form class="addbar" id="addForm">
+      <input type="text" id="newUser" placeholder="Add a friend: @username" autocomplete="off" spellcheck="false">
+      <input type="text" id="newMsg" placeholder="message (optional), e.g. “hey @name!”" autocomplete="off">
+      <button type="submit" class="btn red">Add</button>
+    </form>
+    <div class="listhead"><span>Use the <b>username</b> (the part after the @), not the display name.</span>
+      <button id="btnCheckAll" type="button" class="btn small">Check all</button></div>
+    <div id="friends"></div>
+    <div id="noFriends" class="empty" hidden><span class="big">🫥</span>No friends yet. Add one above.</div>
+  </section>
+
+  <section class="panel" data-panel="messages" hidden>
+    <p class="hint">Friends without a custom message get a random one from this list. Click a message to edit it.
+      You can write <code>@name</code> (the friend's name, e.g. “Vincenzo”) and <code>@username</code> (their @).</p>
+    <div class="msgs" id="msgs"></div>
+    <form class="addbar" id="addMsgForm">
+      <input type="text" id="newDefMsg" placeholder="New message, e.g. 🔥 or “good morning @name!”" autocomplete="off">
+      <button type="submit" class="btn red">Add</button>
+    </form>
+  </section>
+
+  <section class="panel" data-panel="settings" hidden>
+    <label class="setting">
+      <span><span class="t">Send after</span><br><span class="d">Detok won't message anyone before this time.</span></span>
+      <input type="time" id="after">
+    </label>
+    <label class="setting">
+      <span><span class="t">Invisible browser</span><br><span class="d">Turn it off if TikTok blocks sending: a window will open for a few seconds.</span></span>
+      <input type="checkbox" class="switch" id="headless">
+    </label>
+  </section>
+
+  <section class="panel" data-panel="log" hidden>
+    <pre id="log"></pre>
+  </section>
+
+  <footer>Detok <span id="ver"></span> · <a href="https://github.com/zGenny/detok" target="_blank" rel="noopener">GitHub</a> ·
+    not affiliated with TikTok</footer>
+</main>
+<div id="toast" role="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const PLACEHOLDER = /@(name|nome|username)\b/gi;
+
+let state = null;
+let draft = null;
+let lastSnapshot = "";
+let pendingSaves = 0;
+let saveCount = 0;
+let saveQueue = Promise.resolve();
+let editing = null;
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else if (key in node) node[key] = value;
+    else node.setAttribute(key, value);
+  }
+  node.append(...children.filter(child => child != null));
+  return node;
+}
+
+function toast(text) {
+  const box = $("toast");
+  box.textContent = text;
+  box.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => box.classList.remove("show"), 2500);
+}
+
+async function api(path, body) {
+  const options = body === undefined ? {} : {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "X-Detok": "1"},
+    body: JSON.stringify(body),
+  };
+  const response = await fetch(path, options);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || response.statusText);
+  return data;
+}
+
+function fill(text, username, nickname) {
+  return text.replace(PLACEHOLDER, (_, word) =>
+    word.toLowerCase() === "username" ? "@" + username : (nickname || username));
+}
+
+function hasPlaceholder(text) {
+  return new RegExp(PLACEHOLDER.source, "i").test(text);
+}
+
+const findFriend = username => draft.friends.find(f => f.username === username);
+
+function setState(next) {
+  state = next;
+  lastSnapshot = JSON.stringify(next);
+  render();
+}
+
+function save(change, message = "Saved") {
+  change(draft);
+  pendingSaves++;
+  saveCount++;
+  const body = structuredClone(draft);
+  saveQueue = saveQueue.then(async () => {
+    try {
+      state = await api("/api/config", body);
+      lastSnapshot = JSON.stringify(state);
+      if (message) toast(message);
+    } catch (e) {
+      toast(e.message);
+      try { state = await api("/api/state"); } catch {}
+    } finally {
+      pendingSaves--;
+      render();
+    }
+  });
+  render();
+  return saveQueue;
+}
+
+async function post(path, body, message) {
+  try {
+    setState(await api(path, body));
+    if (message) toast(message);
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
+function startEditing(kind, key, value) {
+  editing = {kind, key, value, focused: false};
+  render();
+}
+
+function stopEditing() {
+  editing = null;
+  render();
+}
+
+function isEditing(kind, key) {
+  return editing && editing.kind === kind && editing.key === key;
+}
+
+function editor(placeholder, onSave, preview) {
+  const input = el("input", {type: "text", value: editing.value, placeholder, autocomplete: "off"});
+  const previewLine = el("div", {className: "preview"});
+
+  const update = () => {
+    editing.value = input.value;
+    previewLine.textContent = hasPlaceholder(input.value) ? "Preview: " + preview(input.value) : "";
+  };
+  const finish = () => { input.blur(); onSave(input.value.trim()); };
+  const cancel = () => { input.blur(); stopEditing(); };
+  const insertName = () => {
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    const before = input.value.slice(0, start);
+    const token = (before && !/\s$/.test(before) ? " " : "") + "@name";
+    input.value = before + token + input.value.slice(end);
+    input.focus();
+    input.setSelectionRange(start + token.length, start + token.length);
+    update();
+  };
+
+  input.addEventListener("input", update);
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); finish(); }
+    if (e.key === "Escape") cancel();
+  });
+  update();
+
+  if (!editing.focused) {
+    editing.focused = true;
+    setTimeout(() => { input.focus(); input.setSelectionRange(input.value.length, input.value.length); });
+  }
+
+  return el("div", {className: "edit"}, input, previewLine,
+    el("div", {className: "btns"},
+      el("button", {type: "button", className: "btn small red", onclick: finish}, "Save"),
+      el("button", {type: "button", className: "btn small", onclick: cancel}, "Cancel"),
+      el("button", {type: "button", className: "btn small ph", title: "Insert the friend's name", onclick: insertName}, "+ @name")));
+}
+
+function statusChip(friend) {
+  if (!friend.enabled) return el("span", {className: "chip off"}, "paused");
+  if (friend.sent_today && friend.verified === false)
+    return el("span", {className: "chip warn", title: "The box emptied but the message wasn't seen in the chat"}, "sent?");
+  if (friend.sent_today)
+    return el("span", {className: "chip ok", title: `${friend.last_sent || ""} “${friend.last_message || ""}”`}, "✓ sent");
+  if (friend.last_error) return el("span", {className: "chip bad"}, "error");
+  return el("span", {className: "chip warn"}, "to send");
+}
+
+function avatar(username, profile) {
+  if (profile?.found && profile.avatar) {
+    const src = `/avatar/${encodeURIComponent(username)}?v=${encodeURIComponent(profile.checked)}`;
+    return el("img", {className: "avatar", alt: "", src});
+  }
+  const initial = profile?.found ? (profile.nickname || "?").slice(0, 1).toUpperCase() : "?";
+  return el("span", {className: "avatar"}, initial);
+}
+
+function nameLine(username, profile, streak) {
+  const found = profile?.found;
+  const handle = found ? el("span", {className: "h"}, "@" + username + (profile.private ? " · private" : "")) : null;
+  const fire = streak > 0 ? el("span", {className: "streak", title: "Days in a row with Detok"}, "🔥 " + streak) : null;
+  return el("div", {className: "fname"}, el("span", {className: "nick"}, found ? profile.nickname : "@" + username), fire, handle);
+}
+
+function profileNote(profile) {
+  if (profile?.found) {
+    return profile.can_message ? null : el("div", {className: "note warn"}, "you can't message them: do you follow each other?");
+  }
+  if (profile?.found === false) return el("div", {className: "note bad"}, "account not found: check the username");
+  return el("div", {className: "note muted"}, state.job === "check" ? "checking…" : "not checked yet");
+}
+
+function friendMessage(friend, nickname) {
+  const username = friend.username;
+  if (isEditing("friend", username)) {
+    return editor("empty = random from the list", text => {
+      editing = null;
+      if (!findFriend(username) || findFriend(username).message === text) return render();
+      save(d => { findFriend(username).message = text; },
+           text ? `Message for @${username} saved` : `@${username} will get a random message`);
+    }, text => fill(text, username, nickname));
+  }
+
+  const open = () => startEditing("friend", username, friend.message);
+  if (!friend.message) {
+    return el("div", {className: "fmsg", title: "Click to write a custom message", onclick: open},
+      "💬 ", el("span", {className: "rnd"}, "random from the list"));
+  }
+  const preview = hasPlaceholder(friend.message)
+    ? el("div", {className: "preview"}, "→ " + fill(friend.message, username, nickname)) : null;
+  return el("div", {className: "fmsg", title: "Click to edit", onclick: open}, "💬 " + friend.message, preview);
+}
+
+function friendRow(friend, live) {
+  const username = friend.username;
+  const status = live || {...friend, sent_today: false};
+  const profile = status.profile;
+  const nickname = profile?.found ? profile.nickname : null;
+
+  const error = status.last_error ? el("div", {className: "err"}, status.last_error + " ",
+    status.has_shot ? el("a", {href: "/shot/" + encodeURIComponent(username), target: "_blank"}, "screenshot") : null) : null;
+
+  const actions = el("div", {className: "acts"},
+    el("button", {className: "icon", type: "button", title: "Edit message",
+      onclick: () => startEditing("friend", username, friend.message)}, "✎"),
+    el("button", {className: "icon", type: "button", title: "Check account", disabled: !!state.job,
+      onclick: () => checkAccounts([username])}, "↻"),
+    el("button", {className: "icon", type: "button", title: "Remove", onclick: () => {
+      if (confirm(`Remove @${username}?`))
+        save(d => { d.friends = d.friends.filter(f => f.username !== username); }, `@${username} removed`);
+    }}, "✕"));
+
+  const toggle = el("input", {
+    type: "checkbox", className: "switch", checked: friend.enabled, "aria-label": `Send to @${username}`,
+    title: friend.enabled ? "Active: click to pause" : "Paused: click to activate",
+    onchange: e => save(d => { findFriend(username).enabled = e.target.checked; },
+                        e.target.checked ? `@${username} active` : `@${username} paused`),
+  });
+
+  return el("div", {className: "friend" + (friend.enabled ? "" : " paused")},
+    avatar(username, profile),
+    el("div", {className: "fbody"}, nameLine(username, profile, status.streak), friendMessage(friend, nickname),
+      profileNote(profile), error),
+    el("div", {className: "fside"}, statusChip(status), actions, toggle));
+}
+
+function renderFriends() {
+  const live = Object.fromEntries(state.friends.map(f => [f.username, f]));
+  $("friends").replaceChildren(...draft.friends.map(f => friendRow(f, live[f.username])));
+  $("noFriends").hidden = draft.friends.length > 0;
+}
+
+function defaultMessage(text) {
+  if (isEditing("message", text)) {
+    return el("div", {className: "msg editing"}, editor("message", updated => {
+      if (!updated) return toast("The message is empty (use ✕ to remove it)");
+      if (updated !== text && draft.default_messages.includes(updated)) return toast("Already in the list");
+      editing = null;
+      if (updated === text) return render();
+      save(d => { d.default_messages = d.default_messages.map(m => m === text ? updated : m); }, "Message updated");
+    }, updated => fill(updated, "username", "Vincenzo")));
+  }
+
+  const remove = () => {
+    if (draft.default_messages.length === 1) return toast("You need at least one message");
+    save(d => { d.default_messages = d.default_messages.filter(m => m !== text); }, "Message removed");
+  };
+  return el("span", {className: "msg"},
+    el("span", {className: "txt", title: "Click to edit", onclick: () => startEditing("message", text, text)}, text),
+    el("button", {type: "button", title: "Remove", onclick: remove}, "✕"));
+}
+
+function renderMessages() {
+  $("msgs").replaceChildren(...draft.default_messages.map(defaultMessage));
+}
+
+function typingIn(container) {
+  const active = document.activeElement;
+  return active?.tagName === "INPUT" && active.type !== "checkbox" && container.contains(active);
+}
+
+function renderHeader() {
+  const busy = state.job;
+  const expiry = state.session_expiry;
+  const auto = state.timer;
+
+  $("sessDot").className = "dot " + (expiry ? "on" : "off");
+  $("sess").textContent = expiry ? `Connected to TikTok (until ${expiry.slice(0, 10)})` : "Not connected to TikTok";
+  $("tmr").textContent = " · auto-send " + (auto.enabled ? "on" : "off");
+  $("tmr").title = auto.backend === "builtin" ? "Runs inside Detok: stays on as long as the server is running" : "";
+
+  $("btnLogin").hidden = !state.can_login;
+  $("btnLogin").disabled = !!busy;
+  $("btnLogin").className = "btn" + (expiry ? "" : " red");
+  $("btnLogin").textContent = busy === "login" ? "Login window open…" : expiry ? "Log in again" : "Log in to TikTok";
+
+  $("btnImport").hidden = state.can_login;
+  $("btnImport").disabled = !!busy;
+  $("btnImport").className = "btn" + (expiry ? "" : " red");
+  $("btnImport").textContent = busy === "session" ? "Importing…" : expiry ? "Re-import session…" : "Import session…";
+
+  $("btnTimer").className = "btn" + (auto.enabled ? "" : " red");
+  $("btnTimer").textContent = auto.enabled ? "Turn off auto-send" : "Turn on auto-send";
+
+  $("btnSend").disabled = !!busy;
+  $("btnSend").textContent = busy === "send" ? "Sending…" : "Send now";
+
+  const active = state.friends.filter(f => f.enabled);
+  const sent = active.filter(f => f.sent_today).length;
+  $("statFriends").textContent = state.friends.length;
+  $("today").textContent = `${sent}/${active.length}`;
+  $("today").style.color = active.length && sent === active.length ? "var(--ok)" : "";
+  $("statTime").textContent = state.config.send_after;
+  $("nFriends").textContent = state.friends.length || "";
+  $("nMsgs").textContent = state.config.default_messages.length;
+  $("ver").textContent = "v" + state.version;
+}
+
+function renderLog() {
+  const log = $("log");
+  const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 30;
+  log.textContent = state.log.join("\n") || "Nothing yet.";
+  if (atBottom) log.scrollTop = log.scrollHeight;
+}
+
+function render() {
+  if (pendingSaves === 0) draft = structuredClone(state.config);
+  renderHeader();
+
+  if (document.activeElement !== $("after")) $("after").value = draft.send_after;
+  $("headless").checked = draft.headless;
+  $("btnCheckAll").disabled = !!state.job || !draft.friends.length;
+  $("btnCheckAll").textContent = state.job === "check" ? "Checking…" : "Check all";
+
+  if (!typingIn($("msgs"))) renderMessages();
+  if (!typingIn($("friends"))) renderFriends();
+  renderLog();
+}
+
+async function refresh() {
+  const savesBefore = saveCount;
+  try {
+    const next = await api("/api/state");
+    if (savesBefore !== saveCount || pendingSaves) return;
+    if (JSON.stringify(next) !== lastSnapshot) setState(next);
+  } catch {
+    toast("Server unreachable");
+  }
+}
+
+async function checkAccounts(usernames) {
+  await post("/api/check", {usernames}, "Check started");
+}
+
+function showTab(name) {
+  if (!document.querySelector(`[data-panel="${name}"]`)) name = "friends";
+  for (const tab of document.querySelectorAll(".tab")) tab.setAttribute("aria-selected", tab.dataset.tab === name);
+  for (const panel of document.querySelectorAll(".panel")) panel.hidden = panel.dataset.panel !== name;
+  try { localStorage.setItem("detok-tab", name); } catch {}
+}
+
+$("addForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const username = $("newUser").value.trim().replace(/^@/, "").toLowerCase();
+  if (!username) return;
+  if (findFriend(username)) return toast("Already in the list");
+  const message = $("newMsg").value.trim();
+  await save(d => { d.friends.push({username, message, enabled: true}); }, `@${username} added`);
+  if (state.config.friends.some(f => f.username === username)) {
+    $("newUser").value = "";
+    $("newMsg").value = "";
+    $("newUser").focus();
+    if (!state.job) checkAccounts([username]);
+  }
+});
+
+$("addMsgForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const message = $("newDefMsg").value.trim();
+  if (!message) return;
+  if (draft.default_messages.includes(message)) return toast("Already in the list");
+  await save(d => { d.default_messages.push(message); }, "Message added");
+  if (state.config.default_messages.includes(message)) {
+    $("newDefMsg").value = "";
+    $("newDefMsg").focus();
+  }
+});
+
+$("after").addEventListener("change", e => {
+  const time = e.target.value;
+  if (time && time !== draft.send_after) save(d => { d.send_after = time; }, `Sending after ${time}`);
+});
+
+$("headless").addEventListener("change", e => save(d => { d.headless = e.target.checked; }));
+
+$("sessFile").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  let session;
+  try { session = JSON.parse(await file.text()); } catch { return toast("Not a valid JSON file"); }
+  post("/api/session", session, "Import started: check the log");
+});
+
+$("btnCheckAll").onclick = () => checkAccounts([]);
+$("btnImport").onclick = () => $("sessFile").click();
+$("btnLogin").onclick = () => post("/api/login", {}, "The browser opens: log in, then close the window");
+$("btnSend").onclick = async () => { await saveQueue; post("/api/send", {}, "Sending started"); };
+$("btnTimer").onclick = () => post("/api/timer", {on: !state.timer.enabled},
+  state.timer.enabled ? "Auto-send turned off" : "Auto-send turned on");
+
+for (const tab of document.querySelectorAll(".tab")) tab.onclick = () => showTab(tab.dataset.tab);
+
+let savedTab = "friends";
+try { savedTab = localStorage.getItem("detok-tab") || "friends"; } catch {}
+showTab(savedTab);
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>

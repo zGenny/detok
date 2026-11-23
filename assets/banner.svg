@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420">
+  <defs>
+    <radialGradient id="glowCyan" cx="18%" cy="30%" r="55%">
+      <stop offset="0" stop-color="#25f4ee" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#25f4ee" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowPink" cx="85%" cy="75%" r="55%">
+      <stop offset="0" stop-color="#fe2c55" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#fe2c55" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#fe2c55"/>
+      <stop offset=".55" stop-color="#ff7a1a"/>
+      <stop offset="1" stop-color="#ffd23f"/>
+    </linearGradient>
+    <linearGradient id="core" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffd23f"/>
+      <stop offset="1" stop-color="#fff6c9"/>
+    </linearGradient>
+    <path id="flamePath" d="M0 -78 C 30 -44 58 -18 52 22 C 47 58 24 78 0 78 C -24 78 -50 60 -53 26 C -56 -6 -36 -24 -22 -52 C -16 -28 -8 -20 2 -18 C 10 -38 8 -58 0 -78 Z"/>
+    <path id="corePath" d="M0 -10 C 14 6 24 20 21 38 C 18 54 9 62 0 62 C -10 62 -21 53 -22 38 C -23 24 -12 14 -6 0 C -3 10 0 13 4 14 C 6 6 4 -2 0 -10 Z"/>
+  </defs>
+
+  <rect width="1280" height="420" fill="#0d0d0f"/>
+  <rect width="1280" height="420" fill="url(#glowCyan)"/>
+  <rect width="1280" height="420" fill="url(#glowPink)"/>
+
+  <g transform="translate(330 178)">
+    <rect x="-92" y="-92" width="184" height="184" rx="44" fill="#25f4ee" transform="translate(-7 -7)"/>
+    <rect x="-92" y="-92" width="184" height="184" rx="44" fill="#fe2c55" transform="translate(7 7)"/>
+    <rect x="-92" y="-92" width="184" height="184" rx="44" fill="#000"/>
+    <use href="#flamePath" fill="url(#flame)" transform="translate(0 4)"/>
+    <use href="#corePath" fill="url(#core)" transform="translate(0 4)"/>
+  </g>
+
+  <g font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="900" font-size="150" letter-spacing="-4">
+    <text x="488" y="232" fill="#25f4ee">Detok</text>
+    <text x="500" y="240" fill="#fe2c55">Detok</text>
+    <text x="494" y="236" fill="#ffffff">Detok</text>
+  </g>
+
+  <text x="498" y="292" fill="#d9d9de" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="30" font-weight="700" letter-spacing="1">Keep the streak. Lose the scroll.</text>
+
+  <g font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#ffffff">
+    <rect x="498" y="318" width="196" height="38" rx="19" fill="#ffffff" fill-opacity=".08" stroke="#ffffff" stroke-opacity=".18"/>
+    <text x="596" y="343" text-anchor="middle">TikTok streaks</text>
+    <rect x="706" y="318" width="160" height="38" rx="19" fill="#fe2c55"/>
+    <text x="786" y="343" text-anchor="middle">on autopilot</text>
+    <rect x="878" y="318" width="262" height="38" rx="19" fill="#ffffff" fill-opacity=".08" stroke="#ffffff" stroke-opacity=".18"/>
+    <text x="1009" y="343" text-anchor="middle">Windows · Linux · Docker</text>
+  </g>
+</svg>

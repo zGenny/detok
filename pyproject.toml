@@ -1,0 +1,32 @@
+[project]
+name = "detok"
+dynamic = ["version"]
+description = "Detok — Keep the Streak: tiene vive le serie di TikTok mandando un messaggio al giorno agli amici, così TikTok puoi anche non aprirlo."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = ["playwright>=1.50"]
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/zGenny/detok"
+
+[project.scripts]
+detok = "detok.__main__:main"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["detok"]
+
+[tool.setuptools.dynamic]
+version = { attr = "detok.__version__" }
+
+[tool.setuptools.package-data]
+detok = ["static/*"]
