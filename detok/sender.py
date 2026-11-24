@@ -28,6 +28,11 @@ CHAT_HEADER = '[data-e2e="chat-uniqueid"]'
 MESSAGE_LIST = '[data-e2e="dm-new-message-list"]'
 CONVERSATION = '[data-e2e="dm-new-conversation-item"]'
 CONVERSATION_NAME = '[data-e2e="dm-new-conversation-nickname"]'
+# EU cookie banner: it covers the message box and makes the click time out. Decline first, accept as a fallback.
+COOKIE_BUTTONS = [
+    re.compile(r"^\s*(decline optional cookies|decline all|reject all|rifiuta (i cookie )?(facoltativi|tutto))\s*$", re.I),
+    re.compile(r"^\s*(allow all|accept all|consenti tutto|accetta tutto)\s*$", re.I),
+]
 
 
 def browser_ready() -> bool:
@@ -76,6 +81,24 @@ def first_visible(page, selectors: list[str], timeout_ms: int):
                 pass
         if time.monotonic() > deadline:
             return None
+        page.wait_for_timeout(300)
+
+
+def dismiss_cookie_banner(page, timeout_ms: int = 3000) -> bool:
+    """Close TikTok's cookie banner if it shows up (it lives in a shadow DOM, which Playwright pierces)."""
+    deadline = time.monotonic() + timeout_ms / 1000
+    while True:
+        for name in COOKIE_BUTTONS:
+            button = page.get_by_role("button", name=name).first
+            try:
+                if button.is_visible():
+                    button.click(timeout=5000)
+                    page.wait_for_timeout(800)
+                    return True
+            except Exception:
+                pass
+        if time.monotonic() > deadline:
+            return False
         page.wait_for_timeout(300)
 
 
@@ -152,6 +175,7 @@ def read_profile(page, username: str) -> dict:
 def visit_profile(page, username: str, state: dict) -> dict:
     page.goto(f"{TIKTOK}/@{username}?lang=en", wait_until="domcontentloaded")
     page.wait_for_timeout(1500)
+    dismiss_cookie_banner(page)
     profile = read_profile(page, username)
     state.setdefault("profiles", {})[username] = profile
     return profile
@@ -244,6 +268,7 @@ def send_message(page, username: str, message: str, state: dict) -> bool:
 
     if chat_username(page) != username:
         raise RuntimeError("the open chat is not the right one: send cancelled")
+    dismiss_cookie_banner(page, 1000)
     box.click()
     box.fill(message)
     page.wait_for_timeout(600)
